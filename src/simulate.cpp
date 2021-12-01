@@ -17,9 +17,9 @@
 #include <mutex>
 #include <chrono>
 
-#include <ros/ros.h>
 #include <std_msgs/String.h>
 #include "controller.h"
+#include <signal.h>
 
 //-------------------------------- global -----------------------------------------------
 
@@ -1857,7 +1857,7 @@ void simulate(void)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 _control.getJointsDatas(d->time, d->qpos, d->qvel);
                 _control.control();
-                _control.setJointsDatas(d->ctrl);
+                _control.setJointsDatas(d->qpos);
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1952,7 +1952,7 @@ void init(void)
         mju_error("Headers and library have different versions");
 
     // activate MuJoCo license
-    mj_activate("/home/gyubuntu/Simulations/mujoco200_linux/bin/mjkey.txt");
+    mj_activate("/home/kist/mujoco200_linux/bin/mjkey.txt");
 
     // init GLFW, set timer callback (milliseconds)
     if (!glfwInit())
@@ -2030,18 +2030,28 @@ void init(void)
     uiModify(window, &ui1, &uistate, &con);
 }
 
-
+void signalHandler(int signum)
+{
+    cout << "Caught Ctrl+c!!\n";
+    ROS_WARN("Terminate ROS processes...");
+    ros::shutdown();
+    settings.exitrequest = true;
+}
 
 // run event loop
 int main(int argc, char** argv)
 {
     // initialize everything
     init();
-    ros::init(argc, argv, "manipulator_simulate");
-    char str[100] = "/home/gyubuntu/catkin_ws/src/manipulator_test/model/franka_panda.xml";
+    char str[100] = "/home/kist/KIST-Dual-Arm-ROS/src/ROS-manipulator-panda/model/franka_panda.xml";
     
+    ros::init(argc, argv, "manipulator_simulate", ros::InitOption::NoSigintHandler);
+    ros::NodeHandle nh_;
+    _control.getNodeHandler(&nh_);
+
     memcpy(filename, str, sizeof(str));
     settings.loadrequest = 2;
+
     // request loadmodel if file given (otherwise drag-and-drop)
     // if( argc>1 )
     // {
@@ -2051,7 +2061,7 @@ int main(int argc, char** argv)
 
     // start simulation thread
     std::thread simthread(simulate);
-
+    signal(SIGINT, signalHandler);
     // event loop
     while( !glfwWindowShouldClose(window) && !settings.exitrequest )
     {

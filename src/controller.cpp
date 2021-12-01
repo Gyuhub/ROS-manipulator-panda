@@ -11,6 +11,12 @@ Controller::~Controller()
 {
 }
 
+void Controller::getNodeHandler(ros::NodeHandle* nh_ptr)
+{
+    _nh_ptr = nh_ptr;
+    _ROSWrapper.getNodeHandler(_nh_ptr);
+}
+
 void Controller::getJointsDatas(double t, double *q, double *qdot)
 {
     _time_pre = _time;
@@ -26,8 +32,9 @@ void Controller::getJointsDatas(double t, double *q, double *qdot)
 void Controller::control()
 {
     modelUpdate();
-    _control_mode = 3;
+    // _control_mode = 3;
     trajectoryPlan();
+    //_ROSWrapper.publishTopic();
     switch (_control_mode)
     {
     case 1: // gravity compensation
@@ -55,7 +62,7 @@ void Controller::setJointsDatas(double *tau)
     }
     tau[7] = 0.0;
     tau[8] = 0.0;
-    cout << _x.head(3).transpose() << ' ' << _x.tail(3).transpose() * RAD2DEG << '\t' << _time << '\n';
+    // cout << _x.head(3).transpose() << ' ' << _x.tail(3).transpose() * RAD2DEG << '\t' << _time << '\n';
 }
 
 void Controller::modelUpdate()
@@ -88,6 +95,7 @@ void Controller::trajectoryPlan()
     case 2: // joint space control
         if (_jtrajectory.isTrajFinished())
         {
+            _control_mode = _jtrajectory.isTrajEnd(_control_mode, _time);
             _jtrajectory.checkSize(_q);
             _jtrajectory.setStart(_q, _qdot, _time);
             _jtrajectory.setGoal(_q_goal, _qdot_goal, _time + 5.0);
@@ -99,6 +107,7 @@ void Controller::trajectoryPlan()
     case 3: // task space control
         if (_ctrajectory.isTrajFinished())
         {
+            _control_mode = _ctrajectory.isTrajEnd(_control_mode, _time);
             _ctrajectory.checkSize(_x);
             _ctrajectory.setStart(_x, _xdot, _time);
             _ctrajectory.setGoal(_x_goal, _xdot_goal, _time + 5.0);
@@ -122,21 +131,32 @@ void Controller::jointControl()
 
 void Controller::taskControl()
 {
-    _tau.setZero();
-
+    // _tau.setZero();
+    if (_bool_task_control_init == false)
+    {
+        _tau = _q; // tau is not torque in this control mode. It is joint angle 'qpos'
+        _bool_task_control_init = true;
+    }
     _pos_err = _x_des.head(3) - _x.head(3);
     _ori_err = CMath::calcRotationError(_R, CMath::calcRotationMatrixFromEulerAngleXYZ(_x_des.tail(3)));
 
     _posdot_err = _xdot_des.head(3) - _xdot.head(3);
     _oridot_err = -_xdot.tail(3); // only damping
 
-    _xddot_ref.head(3) = _kp_t * _pos_err + _kd_t * _posdot_err;
-    _xddot_ref.tail(3) = _kp_t * _ori_err + _kd_t * _oridot_err;
+    _J_des = _cmodel.getDesiredJacobianFromJointAngle(_tau);
+    _J_T_des = _J_des.transpose();
 
-    _lambda = CMath::pseudoInverseQR(_J_T) * _cmodel._A * CMath::pseudoInverseQR(_J);
-    _null_space_projection = _I - _J_T * _lambda * _J * _cmodel._A.inverse();
+    _x_err.head(3) = _x_des.head(3) - _cmodel.getDesiredPositionFromJointAngle(_tau);
+    _x_err.tail(3) = CMath::calcRotationError(_R, CMath::calcRotationMatrixFromEulerAngleXYZ(_cmodel.getDesiredOrientationFromJointAngle(_tau)));
 
-    _tau = _J_T * _lambda * _xddot_ref + _null_space_projection * (-_cmodel._A * _kd_j * _qdot) + _cmodel._bg;
+    _qdot_ref = (_J_T_des * (_J_des * _J_T_des).inverse()) * (_xdot_des + 10 * _x_err);
+    _tau = _tau + _qdot_ref * _dt;
+
+    // _xddot_ref.head(3) = _kp_t * _pos_err + _kd_t * _posdot_err;
+    // _xddot_ref.tail(3) = _kp_t * _ori_err + _kd_t * _oridot_err;
+    // _lambda = CMath::pseudoInverseQR(_J_T) * _cmodel._A * CMath::pseudoInverseQR(_J);
+    // _null_space_projection = _I - _J_T * _lambda * _J * _cmodel._A.inverse();
+    // _tau = _J_T * _lambda * _xddot_ref + _null_space_projection * (-_cmodel._A * _kd_j * _qdot) + _cmodel._bg;
 }
 
 void Controller::gravityCompensation()
@@ -152,7 +172,7 @@ void Controller::initialize()
     ////////////////////  2. joint space control  ////////////////////
     ////////////////////  3. task space control   ////////////////////
     //////////////////////////////////////////////////////////////////
-    _control_mode = 1; // initial control mode of the robot is gravity compensation
+    _control_mode = 3; // initial control mode of the robot is gravity compensation
 
     _time = 0.0;
     _time_pre = 0.0;
@@ -163,6 +183,8 @@ void Controller::initialize()
     _kd_t = 10.0;  // task d gain
     _kp_j = 100.0; // joint p gain
     _kd_j = 20.0;  // joint d gain
+
+    _bool_task_control_init = false;
 
     _q.setZero(_dofs);
     _qdot.setZero(_dofs);
@@ -179,6 +201,8 @@ void Controller::initialize()
     _xdot_des.setZero(6);
     _x_goal.setZero(6);
     _xdot_goal.setZero(6);
+    _x_err.setZero(6);
+    _xdot_err.setZero(6);
 
     _q_goal(0) = 0.0 * DEG2RAD;
     _q_goal(1) = 0.0 * DEG2RAD;
@@ -194,20 +218,24 @@ void Controller::initialize()
     _x_goal(1) = -0.45;
     _x_goal(2) = 0.8;
     _x_goal(3) = 0.0 * DEG2RAD;
-    _x_goal(4) = -180.0 * DEG2RAD;
-    _x_goal(5) = -90.0 * DEG2RAD;
+    _x_goal(4) = 0.0 * DEG2RAD;
+    _x_goal(5) = 0.0 * DEG2RAD;
 
     _pos_err.setZero();
     _posdot_err.setZero();
     _ori_err.setZero();
     _oridot_err.setZero();
     _xddot_ref.setZero(6);
+    _qdot_ref.setZero(_dofs);
     _lambda.setZero(6, 6);
     _null_space_projection.setZero(6, 6);
 
     _J_weighted_inv.setZero(_dofs, 6);
     _J.setZero(6, _dofs);
     _J_T.setZero(_dofs, 6);
+
+    _J_des.setZero(6, _dofs);
+    _J_T_des.setZero(_dofs, 6);
 
     _R.setZero();
     _I.setZero(_dofs, _dofs);

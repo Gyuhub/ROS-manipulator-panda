@@ -11,7 +11,7 @@ Model::~Model()
 
 void Model::getModel()
 {
-    bool bool_get_model = RigidBodyDynamics::Addons::URDFReadFromFile("/home/gyubuntu/catkin_ws/src/manipulator_test/model/franka_panda.urdf", &_model, false, true);
+    bool bool_get_model = RigidBodyDynamics::Addons::URDFReadFromFile("/home/kist/KIST-Dual-Arm-ROS/src/ROS-manipulator-panda/model/franka_panda.urdf", &_model, false, true);
     if (bool_get_model)
     {
         _dofs = _model.dof_count;
@@ -101,6 +101,35 @@ double Model::getDOFs()
     return _dofs;
 }
 
+Eigen::Vector3d Model::getDesiredPositionFromJointAngle(VectorXd q)
+{
+    Eigen::Vector3d pos_des_;
+    pos_des_.setZero();
+    pos_des_ = RigidBodyDynamics::CalcBodyToBaseCoordinates(_model, q, _ee_id, _body_point_local_ee, false);
+    return pos_des_;
+}
+
+Eigen::Vector3d Model::getDesiredOrientationFromJointAngle(VectorXd q)
+{
+    Eigen::Matrix3d R_;
+    Eigen::Vector3d ori_des_;
+    R_.setZero();
+    ori_des_.setZero();
+    R_ = RigidBodyDynamics::CalcBodyWorldOrientation(_model, q, _ee_id, false).transpose();
+    ori_des_ = R_.eulerAngles(0, 1, 2);
+    return ori_des_;
+}
+
+Eigen::MatrixXd Model::getDesiredJacobianFromJointAngle(VectorXd q)
+{
+    MatrixXd J_des_;
+    J_des_.setZero(6, _dofs);
+    RigidBodyDynamics::CalcPointJacobian6D(_model, q, _ee_id, _body_point_local_ee, _J_des, false);
+    J_des_.block<3, 9>(0, 0) = _J_des.block<3, 9>(3, 0);
+    J_des_.block<3, 9>(3, 0) = _J_des.block<3, 9>(0, 0);
+    return J_des_;
+}
+
 void Model::configurateBody()
 {
     _body_point_local_ee(0) = 0.0;
@@ -137,6 +166,7 @@ void Model::initialize()
 
     _A.setZero(_dofs, _dofs);
     _J.setZero(6, _dofs);
+    _J_des.setZero(6, _dofs);
 
     _R.setZero();
     configurateBody();

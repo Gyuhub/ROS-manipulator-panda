@@ -18,7 +18,7 @@ public:
     Eigen::VectorXd _q, _qdot; // joint angle and joint angular velocity of the model
     Eigen::Vector3d _pos, _posdot, _ori, _oridot; // position and orientation of the model
     Eigen::VectorXd _bg, _b, _g; // b = Coriolis and centrifugal force, g = gravitational force, bg = b + g 
-    Eigen::MatrixXd _A, _J; // inertial matrix and jacobian matrix of the model
+    Eigen::MatrixXd _A, _J, _J_des; // inertial matrix and jacobian matrix of the model
     Eigen::Matrix3d _R; // rotation matrix of end-effector of the model
 
     Model();
@@ -29,6 +29,9 @@ public:
     void getJacobian();
     void getState();
     double getDOFs();
+    Eigen::Vector3d getDesiredPositionFromJointAngle(VectorXd q);
+    Eigen::Vector3d getDesiredOrientationFromJointAngle(VectorXd q);
+    Eigen::MatrixXd getDesiredJacobianFromJointAngle(VectorXd q);
 
 private:
     void configurateBody();

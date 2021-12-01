@@ -19,6 +19,7 @@ public:
     void checkSize(VectorXd x);
     void updateTime(double time);
     bool isTrajFinished();
+    int isTrajEnd(int control_mode, double time);
 
     Eigen::VectorXd getPositionTrajectory();
     Eigen::VectorXd getOrientationTrajectory();

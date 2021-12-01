@@ -23,12 +23,13 @@ find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 set(SRC_FILES
     src/controller.cpp
     src/model.cpp
+    src/roswrapper.cpp
     src/trajectory.cpp
 )
 
 set(MUJOCO_PATH
     # ~/Simulations/mujoco200_linux
-    /home/gyubuntu/Simulations/mujoco200_linux
+    /home/kist/mujoco200_linux
 )
 
 message("Mujoco Path : " ${MUJOCO_PATH})

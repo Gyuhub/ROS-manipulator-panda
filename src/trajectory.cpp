@@ -57,6 +57,18 @@ bool Trajectory::isTrajFinished()
     }
 }
 
+int Trajectory::isTrajEnd(int control_mode, double time)
+{
+    if (time == _goal_time && time != 0.0)
+    {
+        return 1;
+    }
+    else
+    {
+        return control_mode;
+    }
+}
+
 VectorXd Trajectory::getPositionTrajectory()
 {
     Eigen::VectorXd x_(_size);
