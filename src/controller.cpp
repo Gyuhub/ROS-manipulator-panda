@@ -34,7 +34,7 @@ void Controller::control()
     modelUpdate();
     // _control_mode = 3;
     trajectoryPlan();
-    //_ROSWrapper.publishTopic();
+    _ROSWrapper.publishTopic();
     switch (_control_mode)
     {
     case 1: // gravity compensation

@@ -22,6 +22,7 @@ void ROSWrapper::publishTopic()
 
 void ROSWrapper::initialize()
 {
+    _float32_multi_array.data.resize(7);
     _float32_multi_array.data.clear();
     _float32_multi_array.data[0] = 0;
     _float32_multi_array.data[1] = 1;

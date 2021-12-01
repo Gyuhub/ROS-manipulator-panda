@@ -2032,8 +2032,8 @@ void init(void)
 
 void signalHandler(int signum)
 {
-    cout << "Caught Ctrl+c!!\n";
-    ROS_WARN("Terminate ROS processes...");
+    ROS_WARN("\n<<<<<    Caught Ctrl+c!!    >>>>>");
+    ROS_FATAL("Terminate ROS processes...");
     ros::shutdown();
     settings.exitrequest = true;
 }
