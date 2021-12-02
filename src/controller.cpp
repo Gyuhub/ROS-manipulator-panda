@@ -54,14 +54,20 @@ void Controller::control()
     // cout << _x.head(3).transpose() << _x.tail(3).transpose() * RAD2DEG << '\n';
 }
 
-void Controller::setJointsDatas(double *tau)
+void Controller::setJointsDatas(double *tau, double *qpos)
 {
-    for (int i = 0; i < _dofs; i++)
+    if (_control_mode == 3) // task control CLIK
     {
-        tau[i] = _tau(i);
+        for (int i = 0; i < _dofs; i++) qpos[i] = _qpos(i);
+        qpos[7] = 0.0;
+        qpos[8] = 0.0;
     }
-    tau[7] = 0.0;
-    tau[8] = 0.0;
+    else
+    {
+        for (int i = 0; i < _dofs; i++) tau[i] = _tau(i);
+        tau[7] = 0.0;
+        tau[8] = 0.0;
+    }
     // cout << _x.head(3).transpose() << ' ' << _x.tail(3).transpose() * RAD2DEG << '\t' << _time << '\n';
 }
 
@@ -95,10 +101,10 @@ void Controller::trajectoryPlan()
     case 2: // joint space control
         if (_jtrajectory.isTrajFinished())
         {
-            _control_mode = _jtrajectory.isTrajEnd(_control_mode, _time);
             _jtrajectory.checkSize(_q);
             _jtrajectory.setStart(_q, _qdot, _time);
             _jtrajectory.setGoal(_q_goal, _qdot_goal, _time + 5.0);
+            _control_mode = _jtrajectory.isTrajEnd(_control_mode);
         }
         _jtrajectory.updateTime(_time);
         _q_des = _jtrajectory.getPositionTrajectory();
@@ -107,10 +113,10 @@ void Controller::trajectoryPlan()
     case 3: // task space control
         if (_ctrajectory.isTrajFinished())
         {
-            _control_mode = _ctrajectory.isTrajEnd(_control_mode, _time);
             _ctrajectory.checkSize(_x);
             _ctrajectory.setStart(_x, _xdot, _time);
             _ctrajectory.setGoal(_x_goal, _xdot_goal, _time + 5.0);
+            _control_mode = _ctrajectory.isTrajEnd(_control_mode);
         }
         _ctrajectory.updateTime(_time);
         _x_des = _ctrajectory.getPositionTrajectory();
@@ -131,10 +137,10 @@ void Controller::jointControl()
 
 void Controller::taskControl()
 {
-    // _tau.setZero();
+    // _qpos.setZero();
     if (_bool_task_control_init == false)
     {
-        _tau = _q; // tau is not torque in this control mode. It is joint angle 'qpos'
+        _qpos = _q; // tau is not torque in this control mode. It is joint angle 'qpos'
         _bool_task_control_init = true;
     }
     _pos_err = _x_des.head(3) - _x.head(3);
@@ -150,7 +156,7 @@ void Controller::taskControl()
     _x_err.tail(3) = CMath::calcRotationError(_R, CMath::calcRotationMatrixFromEulerAngleXYZ(_cmodel.getDesiredOrientationFromJointAngle(_tau)));
 
     _qdot_ref = (_J_T_des * (_J_des * _J_T_des).inverse()) * (_xdot_des + 10 * _x_err);
-    _tau = _tau + _qdot_ref * _dt;
+    _qpos = _qpos + _qdot_ref * _dt;
 
     // _xddot_ref.head(3) = _kp_t * _pos_err + _kd_t * _posdot_err;
     // _xddot_ref.tail(3) = _kp_t * _ori_err + _kd_t * _oridot_err;
@@ -189,6 +195,7 @@ void Controller::initialize()
     _q.setZero(_dofs);
     _qdot.setZero(_dofs);
     _tau.setZero(_dofs);
+    _qpos.setZero(_dofs);
 
     _x.setZero(6);
     _xdot.setZero(6);
@@ -215,7 +222,7 @@ void Controller::initialize()
     //_q_goal(8) = 0.0;
 
     _x_goal(0) = 0.15;
-    _x_goal(1) = -0.45;
+    _x_goal(1) = 0.45;
     _x_goal(2) = 0.8;
     _x_goal(3) = 0.0 * DEG2RAD;
     _x_goal(4) = 0.0 * DEG2RAD;

@@ -17,7 +17,7 @@ public:
 
     void getJointsDatas(double t, double *q, double *qdot);
     void control();
-    void setJointsDatas(double *tau);
+    void setJointsDatas(double *tau, double *qpos);
     void initialize();
 private:
     Model _cmodel; // dynamic model of the robot (model.h and model.cpp)
@@ -38,7 +38,7 @@ private:
     bool _bool, _bool_task_control_init;
 
     VectorXd _q, _qdot; // angle and angular velocities of joints of the panda
-    VectorXd _tau; // torque of joints of the panda
+    VectorXd _tau, _qpos; // torque of joints of the panda
     VectorXd _x, _xdot; // poses and velocities of end-effector of the panda
 
     VectorXd _q_des, _qdot_des; // desired joint space angle and joint angular velocity of panda

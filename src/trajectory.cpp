@@ -27,8 +27,6 @@ void Trajectory::setGoal(VectorXd x_goal, VectorXd xdot_goal, double goal_time)
     _x_goal = x_goal;
     _xdot_goal = xdot_goal;
     _goal_time = goal_time;
-
-    _bool_traj_finished = false;
 }
 
 void Trajectory::checkSize(VectorXd x)
@@ -47,8 +45,9 @@ void Trajectory::updateTime(double time)
 
 bool Trajectory::isTrajFinished()
 {
-    if (_time >= (_goal_time))
+    if (_time >= (_goal_time) && _bool_traj_finished == false)
     {
+        if (_time != 0) _bool_traj_finished = true;
         return true;
     }
     else
@@ -57,16 +56,10 @@ bool Trajectory::isTrajFinished()
     }
 }
 
-int Trajectory::isTrajEnd(int control_mode, double time)
+int Trajectory::isTrajEnd(int control_mode)
 {
-    if (time == _goal_time && time != 0.0)
-    {
-        return 1;
-    }
-    else
-    {
-        return control_mode;
-    }
+    if (_bool_traj_finished == true) return 1; // gravity compensation
+    else return control_mode;
 }
 
 VectorXd Trajectory::getPositionTrajectory()
