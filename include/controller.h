@@ -57,6 +57,7 @@ private:
     MatrixXd _I; // identity matrix DoFs x DoFs
 
     void modelUpdate(); // Update the model of the robot using RBDL and Eigen
+    void rosHandle(); // handle the entire ROS routine which we want to control the panda
     void trajectoryPlan(); // planning the trajectory of end-effector of the panda
 
     void jointControl(); // joint space control

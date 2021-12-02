@@ -15,6 +15,7 @@ void Controller::getNodeHandler(ros::NodeHandle* nh_ptr)
 {
     _nh_ptr = nh_ptr;
     _ROSWrapper.getNodeHandler(_nh_ptr);
+    _ROSWrapper.initSettings();
 }
 
 void Controller::getJointsDatas(double t, double *q, double *qdot)
@@ -33,6 +34,7 @@ void Controller::control()
 {
     modelUpdate();
     // _control_mode = 3;
+    rosHandle();
     trajectoryPlan();
     _ROSWrapper.publishTopic();
     switch (_control_mode)
@@ -90,6 +92,11 @@ void Controller::modelUpdate()
 
     _xdot.head(3) = _cmodel._posdot;
     _xdot.tail(3) = _cmodel._oridot;
+}
+
+void Controller::rosHandle()
+{
+    _control_mode = _ROSWrapper.getCmdMod();
 }
 
 void Controller::trajectoryPlan()
@@ -178,7 +185,7 @@ void Controller::initialize()
     ////////////////////  2. joint space control  ////////////////////
     ////////////////////  3. task space control   ////////////////////
     //////////////////////////////////////////////////////////////////
-    _control_mode = 3; // initial control mode of the robot is gravity compensation
+    _control_mode = 1; // initial control mode of the robot is gravity compensation
 
     _time = 0.0;
     _time_pre = 0.0;

@@ -2,9 +2,11 @@
 #include <ros/ros.h>
 #include <std_msgs/Float32MultiArray.h>
 #include <iostream>
+#include <Eigen/Dense>
 
 using namespace std;
 using namespace ros;
+using namespace Eigen;
 
 class ROSWrapper
 {
@@ -12,7 +14,10 @@ public:
     ROSWrapper();
     ~ROSWrapper();
     void getNodeHandler(ros::NodeHandle* nh_ptr);
+    void initSettings();
     void publishTopic();
+    void CmdModCallBack(const std_msgs::Float32MultiArrayConstPtr& msg);
+    int getCmdMod();
 private:
     void initialize();
 
@@ -20,5 +25,17 @@ private:
     ros::Publisher _pub;
     ros::Subscriber _sub;
 
+    ////////////////////  ROS standard message type declaration ////////////////////
+    
     std_msgs::Float32MultiArray _float32_multi_array;
+
+    ////////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////  USER defined variables to handle with ROS ////////////////////
+
+    int _ros_control_mode;
+    Eigen::VectorXd _target_pose;
+
+    ////////////////////////////////////////////////////////////////////////////////////
+
 };
