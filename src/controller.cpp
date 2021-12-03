@@ -97,6 +97,7 @@ void Controller::rosHandle()
 {
     _control_mode = _ROSWrapper.getCmdMod();
     _jtrajectory.getCmdCount(_ROSWrapper.getCmdCount());
+    _ctrajectory.getCmdCount(_ROSWrapper.getCmdCount());
     if (_ROSWrapper.isCmdReceived() == true)
     {
         switch (_control_mode)
@@ -109,7 +110,8 @@ void Controller::rosHandle()
             break;
         case 3: // task control
             _qpos = _q;
-            _x_goal = _ROSWrapper.getTargetPose();
+            _x_goal.head(3) = _ROSWrapper.getTargetPose().head(3);
+            _x_goal.tail(3) = _ROSWrapper.getTargetPose().tail(3) * DEG2RAD;
             _ctrajectory.resetTarget();
             break;
         default:
@@ -163,26 +165,24 @@ void Controller::jointControl()
 
 void Controller::taskControl()
 {
-    // _qpos.setZero();
-    if (_bool_task_control_init == false)
-    {
-        _qpos = _q; // tau is not torque in this control mode. It is joint angle 'qpos'
-        _bool_task_control_init = true;
-    }
-    _pos_err = _x_des.head(3) - _x.head(3);
-    _ori_err = CMath::calcRotationError(_R, CMath::calcRotationMatrixFromEulerAngleXYZ(_x_des.tail(3)));
+    // _pos_err = _x_des.head(3) - _x.head(3);
+    // _ori_err = CMath::calcRotationError(_R, CMath::calcRotationMatrixFromEulerAngleXYZ(_x_des.tail(3)));
 
-    _posdot_err = _xdot_des.head(3) - _xdot.head(3);
-    _oridot_err = -_xdot.tail(3); // only damping
+    // _posdot_err = _xdot_des.head(3) - _xdot.head(3);
+    // _oridot_err = -_xdot.tail(3); // only damping
 
     _J_des = _cmodel.getDesiredJacobianFromJointAngle(_qpos);
     _J_T_des = _J_des.transpose();
 
     _x_err.head(3) = _x_des.head(3) - _cmodel.getDesiredPositionFromJointAngle(_qpos);
-    _x_err.tail(3) = CMath::calcRotationError(_R, CMath::calcRotationMatrixFromEulerAngleXYZ(_cmodel.getDesiredOrientationFromJointAngle(_qpos)));
+    // _x_err.tail(3) = Eigen::Vector3d::Zero(3);
+    _x_err.tail(3) = CMath::calcRotationError(_R, CMath::calcRotationMatrixFromEulerAngleXYZ(_cmodel.getDesiredOrientationFromJointAngle(_qpos)));// Something strange
 
     _qdot_ref = (_J_T_des * (_J_des * _J_T_des).inverse()) * (_xdot_des + 10 * _x_err);
-    _qpos = _qpos + _qdot_ref * _dt;
+    if (_ctrajectory.isTrajFinished()) _qpos = _qpos;
+    else _qpos = _qpos + _qdot_ref * _dt;
+
+    // cout << _x.head(3).transpose() << _x.tail(3).transpose() * RAD2DEG << '\n';
 
     // _xddot_ref.head(3) = _kp_t * _pos_err + _kd_t * _posdot_err;
     // _xddot_ref.tail(3) = _kp_t * _ori_err + _kd_t * _oridot_err;
@@ -216,8 +216,6 @@ void Controller::initialize()
     _kp_j = 100.0; // joint p gain
     _kd_j = 20.0;  // joint d gain
 
-    _bool_task_control_init = false;
-
     _q.setZero(_dofs);
     _qdot.setZero(_dofs);
     _tau.setZero(_dofs);
@@ -246,6 +244,7 @@ void Controller::initialize()
     _q_goal(6) = 45.0 * DEG2RAD;
     //_q_goal(7) = 0.0;
     //_q_goal(8) = 0.0;
+    _qpos = _q_goal;
 
     _x_goal(0) = 0.15;
     _x_goal(1) = 0.45;
@@ -272,5 +271,4 @@ void Controller::initialize()
 
     _R.setZero();
     _I.setZero(_dofs, _dofs);
-    _bool = false;
 }

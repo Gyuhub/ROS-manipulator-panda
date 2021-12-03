@@ -49,7 +49,7 @@ void Trajectory::resetTarget()
     if (_bool_cmd(_cmd_count) == 0)
     {
         _goal_time = 0.0;
-        _start_time = 0.0;
+        _start_time = 0.0; 
     }
 }
 

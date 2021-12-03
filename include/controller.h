@@ -35,8 +35,6 @@ private:
     double _kp_j; // p gain (joint)
     double _kd_j; // d gain (joint)
 
-    bool _bool, _bool_task_control_init;
-
     VectorXd _q, _qdot; // angle and angular velocities of joints of the panda
     VectorXd _tau, _qpos; // torque of joints of the panda
     VectorXd _x, _xdot; // poses and velocities of end-effector of the panda

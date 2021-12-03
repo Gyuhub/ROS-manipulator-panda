@@ -105,7 +105,7 @@ Eigen::Vector3d Model::getDesiredPositionFromJointAngle(VectorXd q)
 {
     Eigen::Vector3d pos_des_;
     pos_des_.setZero();
-    pos_des_ = RigidBodyDynamics::CalcBodyToBaseCoordinates(_model, q, _ee_id, _body_point_local_ee, false);
+    pos_des_ = RigidBodyDynamics::CalcBodyToBaseCoordinates(_model, q, _ee_id, _body_point_local_ee, true); // change false to true
     return pos_des_;
 }
 
@@ -115,7 +115,7 @@ Eigen::Vector3d Model::getDesiredOrientationFromJointAngle(VectorXd q)
     Eigen::Vector3d ori_des_;
     R_.setZero();
     ori_des_.setZero();
-    R_ = RigidBodyDynamics::CalcBodyWorldOrientation(_model, q, _ee_id, false).transpose();
+    R_ = RigidBodyDynamics::CalcBodyWorldOrientation(_model, q, _ee_id, true).transpose(); // change false to true
     ori_des_ = R_.eulerAngles(0, 1, 2);
     return ori_des_;
 }
@@ -124,7 +124,7 @@ Eigen::MatrixXd Model::getDesiredJacobianFromJointAngle(VectorXd q)
 {
     MatrixXd J_des_;
     J_des_.setZero(6, _dofs);
-    RigidBodyDynamics::CalcPointJacobian6D(_model, q, _ee_id, _body_point_local_ee, _J_des, false);
+    RigidBodyDynamics::CalcPointJacobian6D(_model, q, _ee_id, _body_point_local_ee, _J_des, true); // change false to true
     J_des_.block<3, 9>(0, 0) = _J_des.block<3, 9>(3, 0);
     J_des_.block<3, 9>(3, 0) = _J_des.block<3, 9>(0, 0);
     return J_des_;
@@ -147,7 +147,6 @@ void Model::initialize()
     _bool_get_jacobian = false;
 
     getModel();
-
     _q.setZero(_dofs);
     _qdot.setZero(_dofs);
 
