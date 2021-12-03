@@ -29,9 +29,10 @@ void Trajectory::setGoal(VectorXd x_goal, VectorXd xdot_goal, double goal_time)
     _goal_time = goal_time;
 }
 
-void Trajectory::checkSize(VectorXd x)
+void Trajectory::checkSize(VectorXd x, int control_mode)
 {
     _size = x.size();
+    _control_mode = control_mode;
     _x_start.resize(_size);
     _x_goal.resize(_size);
     _xdot_start.resize(_size);
@@ -43,11 +44,31 @@ void Trajectory::updateTime(double time)
     _time = time;
 }
 
+void Trajectory::resetTarget()
+{
+    if (_bool_cmd(_cmd_count) == 0)
+    {
+        _goal_time = 0.0;
+        _start_time = 0.0;
+    }
+}
+
+void Trajectory::getCmdCount(int cmd_count)
+{
+    _cmd_count = cmd_count;
+    return;
+}
+
 bool Trajectory::isTrajFinished()
 {
-    if (_time >= (_goal_time) && _bool_traj_finished == false)
+    if (_time == 0)
     {
-        if (_time != 0) _bool_traj_finished = true;
+        return true;
+    }
+    else if (_time >= _goal_time && _bool_cmd(_cmd_count) == 0)
+    {
+        _bool_cmd(_cmd_count) = 1;
+        _control_mode = 1;
         return true;
     }
     else
@@ -56,10 +77,9 @@ bool Trajectory::isTrajFinished()
     }
 }
 
-int Trajectory::isTrajEnd(int control_mode)
+int Trajectory::getControlMode()
 {
-    if (_bool_traj_finished == true) return 1; // gravity compensation
-    else return control_mode;
+    return _control_mode;
 }
 
 VectorXd Trajectory::getPositionTrajectory()
@@ -106,15 +126,16 @@ void Trajectory::initialize(int dofs, double dt)
 {
     _dofs = dofs;
     _size = 6;
+    _control_mode = 1;
+    _cmd_count = 0;
     _dt = dt;
     _time = 0.0;
     _start_time = 0.0;
     _goal_time = 0.0;
 
-    _bool_traj_finished = false;
-
     _x_start.setZero(_size);
     _x_goal.setZero(_size);
     _xdot_start.setZero(_size);
     _xdot_goal.setZero(_size);
+    _bool_cmd.setZero(100); // max size of command buffer
 }

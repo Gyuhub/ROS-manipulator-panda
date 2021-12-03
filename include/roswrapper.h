@@ -19,7 +19,10 @@ public:
     void publishTopic();
     void CmdModCallBack(const std_msgs::Float32MultiArrayConstPtr& msg);
     bool CmdModServiceCallBack(manipulator_test::pandaSrv::Request& req, manipulator_test::pandaSrv::Response& res);
+    
+    bool isCmdReceived();
     int getCmdMod();
+    int getCmdCount();
     Eigen::VectorXd getTargetPose();
 private:
     void initialize();
@@ -37,7 +40,8 @@ private:
 
     ////////////////////  USER defined variables to handle with ROS ////////////////////
 
-    int _ros_control_mode;
+    bool _is_cmd_received;
+    int _ros_control_mode, _ros_cmd_count;
     int _jdofs;
     Eigen::VectorXd _target_pose;
 

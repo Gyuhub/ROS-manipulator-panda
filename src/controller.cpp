@@ -33,10 +33,8 @@ void Controller::getJointsDatas(double t, double *q, double *qdot)
 void Controller::control()
 {
     modelUpdate();
-    // _control_mode = 3;
     rosHandle();
     trajectoryPlan();
-    _ROSWrapper.publishTopic();
     switch (_control_mode)
     {
     case 1: // gravity compensation
@@ -98,18 +96,25 @@ void Controller::modelUpdate()
 void Controller::rosHandle()
 {
     _control_mode = _ROSWrapper.getCmdMod();
-    switch (_control_mode)
+    _jtrajectory.getCmdCount(_ROSWrapper.getCmdCount());
+    if (_ROSWrapper.isCmdReceived() == true)
     {
-    case 1: // gravity compensation
-        break;
-    case 2: // joint control
-        _q_goal = _ROSWrapper.getTargetPose();
-        break;
-    case 3: // task control
-        _x_goal = _ROSWrapper.getTargetPose();
-        break;
-    default:
-        break;
+        switch (_control_mode)
+        {
+        case 1: // gravity compensation
+            break;
+        case 2: // joint control
+            _q_goal = _ROSWrapper.getTargetPose();
+            _jtrajectory.resetTarget();
+            break;
+        case 3: // task control
+            _qpos = _q;
+            _x_goal = _ROSWrapper.getTargetPose();
+            _ctrajectory.resetTarget();
+            break;
+        default:
+            break;
+        }
     }
 }
 
@@ -122,11 +127,11 @@ void Controller::trajectoryPlan()
     case 2: // joint space control
         if (_jtrajectory.isTrajFinished())
         {
-            _jtrajectory.checkSize(_q);
+            _jtrajectory.checkSize(_q, _control_mode);
             _jtrajectory.setStart(_q, _qdot, _time);
             _jtrajectory.setGoal(_q_goal, _qdot_goal, _time + 5.0);
-            _control_mode = _jtrajectory.isTrajEnd(_control_mode);
         }
+        _control_mode = _jtrajectory.getControlMode();
         _jtrajectory.updateTime(_time);
         _q_des = _jtrajectory.getPositionTrajectory();
         _qdot_des = _jtrajectory.getOrientationTrajectory();
@@ -134,11 +139,11 @@ void Controller::trajectoryPlan()
     case 3: // task space control
         if (_ctrajectory.isTrajFinished())
         {
-            _ctrajectory.checkSize(_x);
+            _ctrajectory.checkSize(_x, _control_mode);
             _ctrajectory.setStart(_x, _xdot, _time);
             _ctrajectory.setGoal(_x_goal, _xdot_goal, _time + 5.0);
-            _control_mode = _ctrajectory.isTrajEnd(_control_mode);
         }
+        _control_mode = _ctrajectory.getControlMode();
         _ctrajectory.updateTime(_time);
         _x_des = _ctrajectory.getPositionTrajectory();
         _xdot_des = _ctrajectory.getOrientationTrajectory();
@@ -170,11 +175,11 @@ void Controller::taskControl()
     _posdot_err = _xdot_des.head(3) - _xdot.head(3);
     _oridot_err = -_xdot.tail(3); // only damping
 
-    _J_des = _cmodel.getDesiredJacobianFromJointAngle(_tau);
+    _J_des = _cmodel.getDesiredJacobianFromJointAngle(_qpos);
     _J_T_des = _J_des.transpose();
 
-    _x_err.head(3) = _x_des.head(3) - _cmodel.getDesiredPositionFromJointAngle(_tau);
-    _x_err.tail(3) = CMath::calcRotationError(_R, CMath::calcRotationMatrixFromEulerAngleXYZ(_cmodel.getDesiredOrientationFromJointAngle(_tau)));
+    _x_err.head(3) = _x_des.head(3) - _cmodel.getDesiredPositionFromJointAngle(_qpos);
+    _x_err.tail(3) = CMath::calcRotationError(_R, CMath::calcRotationMatrixFromEulerAngleXYZ(_cmodel.getDesiredOrientationFromJointAngle(_qpos)));
 
     _qdot_ref = (_J_T_des * (_J_des * _J_T_des).inverse()) * (_xdot_des + 10 * _x_err);
     _qpos = _qpos + _qdot_ref * _dt;

@@ -70,9 +70,10 @@ bool ROSWrapper::CmdModServiceCallBack(manipulator_test::pandaSrv::Request& req,
         _target_pose.resize(_jdofs); // NOTE: 9 is the number of joint DoFs
         _target_pose.setZero();
         for (auto it = (req.cmd.begin() + 1); it != req.cmd.end(); it++) _target_pose(idx++) = *it;
-        ROS_INFO("* Received target pose!");
+        ROS_INFO("* Received target pose!"); cout << "Target pose : ";
         for (int i = 0; i < _jdofs; i++) cout << "[ " << _target_pose(i) << " ]";
-        cout << '\n'; 
+        cout << '\n';
+        _ros_cmd_count++;
         break;
     case 3: // task control
         ROS_WARN("<<<<< WARNING! Modify the control mode to Task Control!! >>>>>");
@@ -80,9 +81,10 @@ bool ROSWrapper::CmdModServiceCallBack(manipulator_test::pandaSrv::Request& req,
         _target_pose.resize(6); // NOTE: 6 is the number of task space DoFs
         _target_pose.setZero();
         for (auto it = (req.cmd.begin() + 1); it != req.cmd.end(); it++) _target_pose(idx++) = *it;
-        ROS_INFO("* Received target pose!");
+        ROS_INFO("* Received target pose!"); cout << "Target pose : ";
         for (int i = 0; i < 6; i++) cout << "[ " << _target_pose(i) << " ]";
         cout << '\n';
+        _ros_cmd_count++;
         break;
     default:
         ROS_ERROR("Something is wrong! Wait until the correct control mode is received...");
@@ -90,7 +92,13 @@ bool ROSWrapper::CmdModServiceCallBack(manipulator_test::pandaSrv::Request& req,
         break;
     }
     res.ret = true;
+    _is_cmd_received = true;
     return true;
+}
+
+bool ROSWrapper::isCmdReceived()
+{
+    return _is_cmd_received;
 }
 
 int ROSWrapper::getCmdMod()
@@ -98,19 +106,26 @@ int ROSWrapper::getCmdMod()
     return _ros_control_mode;
 }
 
+int ROSWrapper::getCmdCount()
+{
+    return _ros_cmd_count;
+}
+
 Eigen::VectorXd ROSWrapper::getTargetPose()
 {
-    if (_ros_control_mode == 1) {}
+    if (_ros_control_mode == 1) {_is_cmd_received = false;}
     else if (_ros_control_mode == 2)
     {
         Eigen::VectorXd q_(_jdofs);
         q_ = _target_pose;
+        _is_cmd_received = false;
         return q_;
     }
     else if (_ros_control_mode == 3)
     {
         Eigen::VectorXd x_(6);
         x_ = _target_pose;
+        _is_cmd_received = false;
         return x_;
     }
     else {}
@@ -128,7 +143,9 @@ void ROSWrapper::initialize()
     _float32_multi_array.data[1] = 1;
     _float32_multi_array.data[2] = 2;
 
+    _is_cmd_received = false;
     _ros_control_mode = 1;
+    _ros_cmd_count = 0;
     _jdofs = 9;
     _target_pose.setZero(6);
 }
