@@ -1,5 +1,6 @@
 #pragma once
 #include <ros/ros.h>
+#include <manipulator_test/pandaSrv.h>
 #include <std_msgs/Float32MultiArray.h>
 #include <iostream>
 #include <Eigen/Dense>
@@ -17,13 +18,16 @@ public:
     void initSettings();
     void publishTopic();
     void CmdModCallBack(const std_msgs::Float32MultiArrayConstPtr& msg);
+    bool CmdModServiceCallBack(manipulator_test::pandaSrv::Request& req, manipulator_test::pandaSrv::Response& res);
     int getCmdMod();
+    Eigen::VectorXd getTargetPose();
 private:
     void initialize();
 
     ros::NodeHandle* _nh_ptr;
     ros::Publisher _pub;
     ros::Subscriber _sub;
+    ros::ServiceServer _srv;
 
     ////////////////////  ROS standard message type declaration ////////////////////
     
@@ -34,6 +38,7 @@ private:
     ////////////////////  USER defined variables to handle with ROS ////////////////////
 
     int _ros_control_mode;
+    int _jdofs;
     Eigen::VectorXd _target_pose;
 
     ////////////////////////////////////////////////////////////////////////////////////

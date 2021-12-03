@@ -54,6 +54,7 @@ void Controller::control()
         break;
     }
     // cout << _x.head(3).transpose() << _x.tail(3).transpose() * RAD2DEG << '\n';
+    ros::spinOnce();
 }
 
 void Controller::setJointsDatas(double *tau, double *qpos)
@@ -97,6 +98,19 @@ void Controller::modelUpdate()
 void Controller::rosHandle()
 {
     _control_mode = _ROSWrapper.getCmdMod();
+    switch (_control_mode)
+    {
+    case 1: // gravity compensation
+        break;
+    case 2: // joint control
+        _q_goal = _ROSWrapper.getTargetPose();
+        break;
+    case 3: // task control
+        _x_goal = _ROSWrapper.getTargetPose();
+        break;
+    default:
+        break;
+    }
 }
 
 void Controller::trajectoryPlan()
