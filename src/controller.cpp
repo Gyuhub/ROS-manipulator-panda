@@ -105,7 +105,7 @@ void Controller::rosHandle()
         case 1: // gravity compensation
             break;
         case 2: // joint control
-            _q_goal = _ROSWrapper.getTargetPose();
+            _q_goal = _ROSWrapper.getTargetPose() * DEG2RAD;
             _jtrajectory.resetTarget();
             break;
         case 3: // task control
@@ -181,8 +181,6 @@ void Controller::taskControl()
     _qdot_ref = (_J_T_des * (_J_des * _J_T_des).inverse()) * (_xdot_des + 10 * _x_err);
     if (_ctrajectory.isTrajFinished()) _qpos = _qpos;
     else _qpos = _qpos + _qdot_ref * _dt;
-
-    // cout << _x.head(3).transpose() << _x.tail(3).transpose() * RAD2DEG << '\n';
 
     // _xddot_ref.head(3) = _kp_t * _pos_err + _kd_t * _posdot_err;
     // _xddot_ref.tail(3) = _kp_t * _ori_err + _kd_t * _oridot_err;

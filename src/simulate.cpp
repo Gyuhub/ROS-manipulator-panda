@@ -128,7 +128,6 @@ const mjuiDef defFile[] =
     {mjITEM_END}
 };
 
-
 // option section of UI
 const mjuiDef defOption[] = 
 {
@@ -1720,6 +1719,39 @@ void prepare(void)
     // update scene
     mjv_updateScene(m, d, &vopt, &pert, &cam, mjCAT_ALL, &scn);
 
+    mjvGeom G;
+    G.type=mjGEOM_SPHERE;
+    G.dataid = -1;
+    G.objtype = mjOBJ_UNKNOWN;
+    G.objid = -1;
+    G.category = mjCAT_DECOR;
+    G.texid = -1;
+    G.texuniform = 0;
+    G.texrepeat[0] = 1;
+    G.texrepeat[1] = 1;
+    G.emission = 0;
+    G.specular = 0;
+    G.shininess = 0;
+    G.reflectance = 0;
+    
+    G.size[0] = 0;
+    G.size[1] = 0;
+    G.size[2] = 0;
+    G.rgba[0] = 1.0;
+    G.rgba[1] = G.rgba[2] = 0;
+    G.rgba[3] = 1;
+    G.pos[0] = _control._x(0);
+    G.pos[1] = _control._x(1);
+    G.pos[2] = _control._x(2);
+    G.mat[0] = 1;
+    G.mat[1] = 1;
+    G.mat[2] = 1;
+    memset(G.label, 0, 100);
+    G.label[0] = '.';
+    mjvGeom *Gptr = scn.geoms + scn.ngeom;
+    *Gptr = G;
+    scn.ngeom++;
+
     // update watch 
     if( settings.ui0 && ui0.sect[SECT_WATCH].state )
     {
@@ -1952,7 +1984,7 @@ void init(void)
         mju_error("Headers and library have different versions");
 
     // activate MuJoCo license
-    mj_activate("/home/kist/mujoco200_linux/bin/mjkey.txt");
+    mj_activate("/home/gyubuntu/Simulations/mujoco200_linux/bin/mjkey.txt");
 
     // init GLFW, set timer callback (milliseconds)
     if (!glfwInit())
@@ -2043,7 +2075,7 @@ int main(int argc, char** argv)
 {
     // initialize everything
     init();
-    char str[100] = "/home/kist/KIST-Dual-Arm-ROS/src/ROS-manipulator-panda/model/franka_panda.xml";
+    char str[100] = "/home/gyubuntu/catkin_ws/src/manipulator_test/model/franka_panda.xml";
     
     ros::init(argc, argv, "manipulator_simulate", ros::InitOption::NoSigintHandler);
     ros::NodeHandle nh_;

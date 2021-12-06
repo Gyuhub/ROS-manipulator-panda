@@ -96,7 +96,7 @@ namespace CMath
         Eigen::Vector3d skew_goal_z = skew_z * skew_des_z;
 
         Eigen::Vector3d R_err;
-        R_err = (skew_goal_x + skew_goal_y + skew_goal_z) / 2.0;
+        R_err = (skew_goal_x + skew_goal_y + skew_goal_z) * (1.0 / 2.0);
         return R_err;
     }
 }

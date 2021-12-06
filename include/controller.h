@@ -12,6 +12,7 @@ public:
     ~Controller();
 
     ros::NodeHandle* _nh_ptr;
+    VectorXd _x;
 
     void getNodeHandler(ros::NodeHandle* nh_ptr);
 
@@ -37,7 +38,7 @@ private:
 
     VectorXd _q, _qdot; // angle and angular velocities of joints of the panda
     VectorXd _tau, _qpos; // torque of joints of the panda
-    VectorXd _x, _xdot; // poses and velocities of end-effector of the panda
+    VectorXd _xdot; // poses and velocities of end-effector of the panda
 
     VectorXd _q_des, _qdot_des; // desired joint space angle and joint angular velocity of panda
     VectorXd _q_goal, _qdot_goal; // goal joint space angle and joint angular velocity of panda
