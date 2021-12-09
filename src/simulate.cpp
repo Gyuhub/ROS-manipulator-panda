@@ -1984,7 +1984,7 @@ void init(void)
         mju_error("Headers and library have different versions");
 
     // activate MuJoCo license
-    mj_activate("/home/gyubuntu/Simulations/mujoco200_linux/bin/mjkey.txt");
+    mj_activate("/home/kist/mujoco200_linux/bin/mjkey.txt");
 
     // init GLFW, set timer callback (milliseconds)
     if (!glfwInit())
@@ -2074,8 +2074,9 @@ void signalHandler(int signum)
 int main(int argc, char** argv)
 {
     // initialize everything
+    settings.color = 4; // Black color ui
     init();
-    char str[100] = "/home/gyubuntu/catkin_ws/src/manipulator_test/model/franka_panda.xml";
+    char str[100] = "/home/kist/KIST-Dual-Arm-ROS/src/ROS-manipulator-panda/model/franka_panda.xml";
     
     ros::init(argc, argv, "manipulator_simulate", ros::InitOption::NoSigintHandler);
     ros::NodeHandle nh_;
