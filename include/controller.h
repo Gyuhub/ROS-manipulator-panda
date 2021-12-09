@@ -12,7 +12,6 @@ public:
     ~Controller();
 
     ros::NodeHandle* _nh_ptr;
-    VectorXd _x;
 
     void getNodeHandler(ros::NodeHandle* nh_ptr);
 
@@ -38,8 +37,9 @@ private:
 
     VectorXd _q, _qdot; // angle and angular velocities of joints of the panda
     VectorXd _tau, _qpos; // torque of joints of the panda
-    VectorXd _xdot; // poses and velocities of end-effector of the panda
-
+public:
+    VectorXd _x, _xdot; // poses and velocities of end-effector of the panda
+private:
     VectorXd _q_des, _qdot_des; // desired joint space angle and joint angular velocity of panda
     VectorXd _q_goal, _qdot_goal; // goal joint space angle and joint angular velocity of panda
     VectorXd _x_des, _xdot_des; // desired task space position and orientation of panda
@@ -51,9 +51,11 @@ private:
     VectorXd _xddot_ref, _qdot_ref;
     MatrixXd _lambda, _null_space_projection;
 
-    MatrixXd _J, _J_T, _J_weighted_inv, _J_des, _J_T_des; // jacobian, jacobian transpose, jacobian weighted inverse matrix of the panda
+    MatrixXd _J, _J_T, _J_des, _J_T_des; // jacobian, jacobian transpose matrices of the panda
+    MatrixXd _T, _J_A, _J_T_A; // transformation matrix from geometric to analytic jacobian, analytic jacobian and jacobian transpose matices
     Matrix3d _R; // rotation matrix of end-effector of the panda
-    MatrixXd _I; // identity matrix DoFs x DoFs
+    MatrixXd _I_dofs; // identity matrix DoFs x DoFs
+    Matrix3d _I_3, _O_3; // identity matrix 3x3 and zero matrix 3x3
 
     void modelUpdate(); // Update the model of the robot using RBDL and Eigen
     void rosHandle(); // handle the entire ROS routine which we want to control the panda

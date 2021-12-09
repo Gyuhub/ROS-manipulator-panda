@@ -91,6 +91,8 @@ void Controller::modelUpdate()
 
     _xdot.head(3) = _cmodel._posdot;
     _xdot.tail(3) = _cmodel._oridot;
+
+    _J_A = CMath::getAnalyticFromGeometricJacobian(_J , _I_3, _O_3, CMath::getTransformationMatrixFromEulerXYZ(_x.tail(3)));
 }
 
 void Controller::rosHandle()
@@ -180,7 +182,7 @@ void Controller::taskControl()
 
     _qdot_ref = (_J_T_des * (_J_des * _J_T_des).inverse()) * (_xdot_des + 10 * _x_err);
     if (_ctrajectory.isTrajFinished()) _qpos = _qpos;
-    else _qpos = _qpos + _qdot_ref * _dt;
+    else _qpos = _q + _qdot_ref * _dt;
 
     // _xddot_ref.head(3) = _kp_t * _pos_err + _kd_t * _posdot_err;
     // _xddot_ref.tail(3) = _kp_t * _ori_err + _kd_t * _oridot_err;
@@ -260,13 +262,16 @@ void Controller::initialize()
     _lambda.setZero(6, 6);
     _null_space_projection.setZero(6, 6);
 
-    _J_weighted_inv.setZero(_dofs, 6);
     _J.setZero(6, _dofs);
     _J_T.setZero(_dofs, 6);
-
     _J_des.setZero(6, _dofs);
     _J_T_des.setZero(_dofs, 6);
+    _T.setZero(6, 6);
+    _J_A.setZero(6, _dofs);
+    _J_T_A.setZero(_dofs, 6);
 
     _R.setZero();
-    _I.setZero(_dofs, _dofs);
+    _I_dofs.setZero(_dofs, _dofs);
+    _I_3.setIdentity();
+    _O_3.setZero();
 }
