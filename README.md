@@ -25,7 +25,7 @@ You can check either the Eigen is installed or not by entering the command
 ```
 pkg-config --modversion eigen3
 ```
-if the Eigen library is successfully installed, you will see the version of Eigen. Or not just enter the command below to termianl
+if the Eigen library is successfully installed, you will see the version of Eigen. Or not, just enter the command below to terminal
 ```
 sudo apt install libeigen3-dev
 ```
