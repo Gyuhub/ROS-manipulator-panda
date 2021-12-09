@@ -99,4 +99,35 @@ namespace CMath
         R_err = (skew_goal_x + skew_goal_y + skew_goal_z) * (1.0 / 2.0);
         return R_err;
     }
+
+    static Eigen::Matrix3d getTransformationMatrixFromEulerXYZ(Eigen::Vector3d euler)
+    {
+        double roll = euler(0);
+        double pitch = euler(1);
+        double yaw = euler(2);
+
+        Matrix3d T_;
+        T_.setZero();
+
+        T_ << 1 ,    0      ,         sin(pitch)
+            , 0 , cos(roll) , -cos(pitch) * sin(roll)
+            , 0 , sin(roll) ,  cos(roll) * cos(pitch);
+        return T_;
+    }
+
+    static Eigen::MatrixXd getAnalyticFromGeometricJacobian(Eigen::MatrixXd J, Eigen::Matrix3d I, Eigen::Matrix3d O, Eigen::Matrix3d T)
+    {
+        int row = J.rows();
+        int col = J.cols();
+        MatrixXd J_A_;
+        J_A_.setZero(row, col);
+        MatrixXd T_RPY_;
+        T_RPY_.setZero(6, 6);
+        T_RPY_.block<3, 3>(0, 0) = I;
+        T_RPY_.block<3, 3>(3, 0) = O;
+        T_RPY_.block<3, 3>(0, 3) = O;
+        T_RPY_.block<3, 3>(3, 3) = T;
+        J_A_ = T_RPY_ * J;
+        return J_A_;
+    }
 }
