@@ -11,7 +11,7 @@ Model::~Model()
 
 void Model::getModel()
 {
-    bool bool_get_model = RigidBodyDynamics::Addons::URDFReadFromFile("/home/gyubuntu/catkin_ws/src/manipulator_test/model/franka_panda.urdf", &_model, false, true);
+    bool bool_get_model = RigidBodyDynamics::Addons::URDFReadFromFile("/home/kist/KIST-Dual-Arm-ROS/src/ROS-manipulator-panda/model/franka_panda.urdf", &_model, false, true);
     if (bool_get_model)
     {
         _dofs = _model.dof_count;
