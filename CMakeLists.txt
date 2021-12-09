@@ -30,9 +30,9 @@ set(SRC_FILES
 )
 
 set(MUJOCO_PATH
-    /home/gyubuntu/Simulations/mujoco200_linux
+    # /home/gyubuntu/Simulations/mujoco200_linux
     # ~/Simulations/mujoco200_linux
-    # /home/kist/mujoco200_linux
+    /home/kist/mujoco200_linux
 )
 
 message("Mujoco Path : " ${MUJOCO_PATH})
