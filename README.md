@@ -20,7 +20,8 @@ sudo apt install ros-melodic-desktop-full
 ```
 ***
 2. Eigen (Eigen is automatically installed when installing Ubuntu)
-You can check either the Eigen is installed or not by enter the command
+
+You can check either the Eigen is installed or not by entering the command
 ```
 pkg-config --modversion eigen3
 ```
@@ -42,7 +43,9 @@ sudo ldconfig
 ```
 ***
 4. Mujoco
+
 + Mujoco installation link : <https://mujoco.org/download>
+
 If you enter the link successfully, all you need to do is just push the button which has a name of "Linux"
 ```
 cd
