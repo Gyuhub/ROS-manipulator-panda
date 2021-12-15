@@ -35,32 +35,35 @@ namespace CMath
         double Pitch = euler(1);
         double Yaw = euler(2);
 
-        Eigen::Matrix3d R_yaw;
-        R_yaw.setZero();
-        R_yaw(2, 2) = 1.0;
-        R_yaw(0, 0) = cos(Yaw);
-        R_yaw(0, 1) = -sin(Yaw);
-        R_yaw(1, 0) = sin(Yaw);
-        R_yaw(1, 1) = cos(Yaw);
+        // Eigen::Matrix3d R_yaw;
+        // R_yaw.setZero();
+        // R_yaw(2, 2) = 1.0;
+        // R_yaw(0, 0) = cos(Yaw);
+        // R_yaw(0, 1) = -sin(Yaw);
+        // R_yaw(1, 0) = sin(Yaw);
+        // R_yaw(1, 1) = cos(Yaw);
 
-        Eigen::Matrix3d R_pitch;
-        R_pitch.setZero();
-        R_pitch(1, 1) = 1.0;
-        R_pitch(0, 0) = cos(Pitch);
-        R_pitch(2, 2) = cos(Pitch);
-        R_pitch(0, 2) = sin(Pitch);
-        R_pitch(2, 0) = -sin(Pitch);
+        // Eigen::Matrix3d R_pitch;
+        // R_pitch.setZero();
+        // R_pitch(1, 1) = 1.0;
+        // R_pitch(0, 0) = cos(Pitch);
+        // R_pitch(2, 2) = cos(Pitch);
+        // R_pitch(0, 2) = sin(Pitch);
+        // R_pitch(2, 0) = -sin(Pitch);
 
-        Eigen::Matrix3d R_roll;
-        R_roll.setZero();
-        R_roll(0, 0) = 1.0;
-        R_roll(1, 1) = cos(Roll);
-        R_roll(2, 2) = cos(Roll);
-        R_roll(1, 2) = -sin(Roll);
-        R_roll(2, 1) = sin(Roll);
+        // Eigen::Matrix3d R_roll;
+        // R_roll.setZero();
+        // R_roll(0, 0) = 1.0;
+        // R_roll(1, 1) = cos(Roll);
+        // R_roll(2, 2) = cos(Roll);
+        // R_roll(1, 2) = -sin(Roll);
+        // R_roll(2, 1) = sin(Roll);
 
         Eigen::Matrix3d R_;
-        R_.noalias() = R_roll * R_pitch * R_yaw;
+        // R_.noalias() = R_roll * R_pitch * R_yaw;
+        R_ = AngleAxisd(Roll, Vector3d::UnitX())
+            * AngleAxisd(Pitch, Vector3d::UnitY())
+            * AngleAxisd(Yaw, Vector3d::UnitZ());
         return R_;
     }
 
@@ -73,6 +76,7 @@ namespace CMath
         skew(1, 2) = -x(0);
         skew(2, 0) = -x(1);
         skew(2, 1) = x(0);
+        return skew;
     }
 
     static Eigen::Vector3d calcRotationError(Eigen::Matrix3d R, Eigen::Matrix3d R_des)

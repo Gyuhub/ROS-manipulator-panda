@@ -1,3 +1,4 @@
+<?xml version="1.0" ?>
 <mujoco model="crane_x7">
     <compiler angle="radian" meshdir="meshes/visual/" />
     <option tolerance="1e-06" collision="predefined" cone="elliptic" jacobian="sparse" solver="CG" iterations="30" />
@@ -58,7 +59,7 @@
                                     <joint name="crane_x7_wrist_joint" pos="0 0 0" axis="0 0 1" limited="true" range="-2.96365 2.97132" damping="1e-06" frictionloss="0.2" />
                                     <geom type="mesh" rgba="1 0.3 0.3 1" mesh="wide_two_finger_gripper_actuator" />
                                     <geom pos="-0.012 0 0.024" quat="-1 2.65359e-06 0 0" type="mesh" rgba="1 0.3 0.3 1" mesh="wide_two_finger_gripper_finger_a" />
-                                    <geom pos="0.012 0 0.024" quat="1.32679e-06 1 0 0" type="mesh" rgba="1 0.3 0.3 1" mesh="wide_two_finger_gripper_finger_b" />
+                                    <geom pos="0.012 0 0.024" quat="1 0 0 0" type="mesh" rgba="1 0.3 0.3 1" mesh="wide_two_finger_gripper_finger_b" /> <!--quat="1.32679e-06 1 0 0"-->
                                 </body>
                             </body>
                         </body>

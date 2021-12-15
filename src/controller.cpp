@@ -59,9 +59,12 @@ void Controller::setJointsDatas(double *tau, double *qpos)
 {
     if (_control_mode == 3) // task control CLIK
     {
-        for (int i = 0; i < _dofs; i++) qpos[i] = _qpos(i);
-        qpos[7] = 0.0;
-        qpos[8] = 0.0;
+        // for (int i = 0; i < _dofs; i++) qpos[i] = _qpos(i);
+        // qpos[7] = 0.0;
+        // qpos[8] = 0.0;
+        for (int i = 0; i < _dofs; i++) tau[i] = _tau(i);
+        tau[7] = 0.0;
+        tau[8] = 0.0;
     }
     else
     {
@@ -79,8 +82,8 @@ void Controller::modelUpdate()
     _cmodel.getJacobian();
     _cmodel.getState();
 
-    _q = _cmodel._q;
-    _qdot = _cmodel._qdot;
+    // _q = _cmodel._q;
+    // _qdot = _cmodel._qdot;
 
     _J = _cmodel._J;
     _J_T = _J.transpose();
@@ -167,28 +170,33 @@ void Controller::jointControl()
 
 void Controller::taskControl()
 {
-    // _pos_err = _x_des.head(3) - _x.head(3);
-    // _ori_err = CMath::calcRotationError(_R, CMath::calcRotationMatrixFromEulerAngleXYZ(_x_des.tail(3)));
+////////////////////////////////////// CLIK ///////////////////////////////////////////////////////////
+    // _J_des = _cmodel.getDesiredJacobianFromJointAngle(_qpos);
+    // _J_T_des = _J_des.transpose();
+    //
+    // _x_err.head(3) = _x_des.head(3) - _cmodel.getDesiredPositionFromJointAngle(_qpos);
+    // // _x_err.tail(3) = Eigen::Vector3d::Zero(3);
+    // _x_err.tail(3) = CMath::calcRotationError(_R, CMath::calcRotationMatrixFromEulerAngleXYZ(_cmodel.getDesiredOrientationFromJointAngle(_qpos)));// Something strange
+    //
+    // _qdot_ref = (_J_T_des * (_J_des * _J_T_des).inverse()) * (_xdot_des + 100 * _x_err);
+    // if (_ctrajectory.isTrajFinished()) _qpos = _q;
+    // else _qpos = _q + _qdot_ref * _dt;
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+    _tau.setZero();
 
-    // _posdot_err = _xdot_des.head(3) - _xdot.head(3);
-    // _oridot_err = -_xdot.tail(3); // only damping
+    _pos_err = _x_des.head(3) - _x.head(3);
+    _ori_err = CMath::calcRotationError(_R, CMath::calcRotationMatrixFromEulerAngleXYZ(_x_des.tail(3)));
+    
+    _posdot_err = _xdot_des.head(3) - _xdot.head(3);
+    _oridot_err = -_xdot.tail(3); // only damping
 
-    _J_des = _cmodel.getDesiredJacobianFromJointAngle(_qpos);
-    _J_T_des = _J_des.transpose();
-
-    _x_err.head(3) = _x_des.head(3) - _cmodel.getDesiredPositionFromJointAngle(_qpos);
-    // _x_err.tail(3) = Eigen::Vector3d::Zero(3);
-    _x_err.tail(3) = CMath::calcRotationError(_R, CMath::calcRotationMatrixFromEulerAngleXYZ(_cmodel.getDesiredOrientationFromJointAngle(_qpos)));// Something strange
-
-    _qdot_ref = (_J_T_des * (_J_des * _J_T_des).inverse()) * (_xdot_des + 10 * _x_err);
-    if (_ctrajectory.isTrajFinished()) _qpos = _qpos;
-    else _qpos = _q + _qdot_ref * _dt;
-
-    // _xddot_ref.head(3) = _kp_t * _pos_err + _kd_t * _posdot_err;
-    // _xddot_ref.tail(3) = _kp_t * _ori_err + _kd_t * _oridot_err;
-    // _lambda = CMath::pseudoInverseQR(_J_T) * _cmodel._A * CMath::pseudoInverseQR(_J);
-    // _null_space_projection = _I - _J_T * _lambda * _J * _cmodel._A.inverse();
+    _xddot_ref.head(3) = _kp_t * _pos_err + _kd_t * _posdot_err;
+    _xddot_ref.tail(3) = _kp_t * _ori_err + _kd_t * _oridot_err;
+    _lambda = CMath::pseudoInverseQR(_J_T) * _cmodel._A * CMath::pseudoInverseQR(_J);
+    // _null_space_projection = _I_dofs - _J_T * _lambda * _J * _cmodel._A.inverse();
     // _tau = _J_T * _lambda * _xddot_ref + _null_space_projection * (-_cmodel._A * _kd_j * _qdot) + _cmodel._bg;
+    _null_space_projection = _I_dofs - _J_T * _lambda * _J * _cmodel._A.inverse();
+    _tau = _J_T * _lambda * _xddot_ref + _null_space_projection * (_cmodel._A * _kd_j * -_qdot) + _cmodel._bg;
 }
 
 void Controller::gravityCompensation()
@@ -211,10 +219,10 @@ void Controller::initialize()
     _dt = 0.002;
     _dofs = _cmodel.getDOFs();
 
-    _kp_t = 100.0; // task p gain
-    _kd_t = 10.0;  // task d gain
+    _kp_t = 50.0; // task p gain
+    _kd_t = 5.0;  // task d gain
     _kp_j = 100.0; // joint p gain
-    _kd_j = 20.0;  // joint d gain
+    _kd_j = 1.0;  // joint d gain
 
     _q.setZero(_dofs);
     _qdot.setZero(_dofs);
