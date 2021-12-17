@@ -254,13 +254,6 @@ void Controller::initialize()
     //_q_goal(8) = 0.0;
     _qpos = _q_goal;
 
-    _x_goal(0) = 0.15;
-    _x_goal(1) = 0.45;
-    _x_goal(2) = 0.8;
-    _x_goal(3) = 0.0 * DEG2RAD;
-    _x_goal(4) = 0.0 * DEG2RAD;
-    _x_goal(5) = 0.0 * DEG2RAD;
-
     _pos_err.setZero();
     _posdot_err.setZero();
     _ori_err.setZero();
