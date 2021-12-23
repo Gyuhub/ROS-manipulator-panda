@@ -1,0 +1,23 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/home/kist/Move/devel/include/**",
+        "/home/kist/KIST-Dual-Arm-ROS/devel/include/**",
+        "/opt/ros/melodic/include/**",
+        "/home/kist/KIST-Dual-Arm-ROS/src/dual_arm/include/**",
+        "/home/kist/KIST-Dual-Arm-ROS/src/ROS-manipulator-panda/include/**",
+        "/home/kist/Move/src/mobile_robot_test/include/**",
+        "/home/kist/Move/src/service_and_client/include/**",
+        "/home/kist/KIST-Dual-Arm-ROS/src/tf_test/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS"
+    }
+  ],
+  "version": 4
+}
