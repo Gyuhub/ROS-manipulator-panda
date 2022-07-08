@@ -36,7 +36,7 @@ git clone https://github.com/rbdl/rbdl
 cd rbdl
 mkdir build
 cd build
-cmake -D CMAKE_BUILD_TYPE=Release -DRBDL_BUILD_ADDON_URDFREADER=ON -DRBDL_USR_ROS_URDF_LIBRARY=OFF ..
+cmake -D CMAKE_BUILD_TYPE=Release -DRBDL_BUILD_ADDON_URDFREADER=ON ..
 make all
 make install
 sudo ldconfig
